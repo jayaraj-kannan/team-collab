@@ -3,6 +3,12 @@ import { TaskForm, TaskList } from './TaskSection';
 import Toaster, { toast } from './Toaster';
 import { createTask, toggleTaskStatus, deleteTask } from '@/app/actions';
 
+// Mock useTransition to execute immediately
+jest.mock('react', () => ({
+  ...jest.requireActual('react'),
+  useTransition: () => [false, (callback: () => void) => callback()],
+}));
+
 // Mock Lucide icons
 jest.mock('lucide-react', () => ({
   Plus: () => <div data-testid="plus" />,
@@ -35,18 +41,7 @@ describe('TaskSection Components', () => {
       const button = screen.getByText(/Add Task/i);
 
       fireEvent.change(input, { target: { value: 'New Task' } });
-      
-      await act(async () => {
-        fireEvent.click(button);
-      });
-
-      // Wait for the async createTask to be called using a more robust wait
-      await act(async () => {
-        for (let i = 0; i < 10; i++) {
-          if ((createTask as jest.Mock).mock.calls.length > 0) break;
-          await new Promise(resolve => setTimeout(resolve, 10));
-        }
-      });
+      fireEvent.click(button);
 
       expect(createTask).toHaveBeenCalled();
     });
