@@ -7,8 +7,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: FirestoreAdapter(adminDb),
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: process.env.AUTH_GOOGLE_ID!,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET!,
       authorization: {
         params: {
           prompt: "consent",
@@ -21,9 +21,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    async session({ session, user }) {
+    async session({ session, user, token }) {
       if (session.user) {
-        session.user.id = user.id;
+        // user is provided when using a database adapter
+        // token is provided when using JWT sessions
+        session.user.id = user?.id || (token?.sub as string);
       }
       return session;
     },
