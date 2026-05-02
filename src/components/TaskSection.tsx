@@ -8,16 +8,21 @@ import { toast } from './Toaster';
 export function TaskForm() {
   const [isPending, startTransition] = useTransition();
 
-  async function action(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const formData = new FormData(form);
     const title = formData.get('title') as string;
+    
     startTransition(async () => {
       await createTask(formData);
       toast(`Task "${title}" created!`, 'success');
+      form.reset();
     });
   }
 
   return (
-    <form action={action} style={{ display: 'flex', gap: 12 }}>
+    <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '12px' }}>
       <input 
         name="title" 
         placeholder="What needs to be done?" 

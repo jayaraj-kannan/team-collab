@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import { TaskForm, TaskList } from './TaskSection';
 import Toaster, { toast } from './Toaster';
 import { createTask, toggleTaskStatus, deleteTask } from '@/app/actions';
@@ -41,9 +41,13 @@ describe('TaskSection Components', () => {
       const button = screen.getByText(/Add Task/i);
 
       fireEvent.change(input, { target: { value: 'New Task' } });
-      fireEvent.click(button);
+      
+      const form = input.closest('form');
+      if (form) fireEvent.submit(form);
 
-      expect(createTask).toHaveBeenCalled();
+      await waitFor(() => {
+        expect(createTask).toHaveBeenCalled();
+      });
     });
   });
 
