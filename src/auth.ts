@@ -4,7 +4,7 @@ import { FirestoreAdapter } from "@auth/firebase-adapter";
 import { adminDb } from "./lib/firebase-admin";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: FirestoreAdapter(adminDb),
+  adapter: (process.env.NEXT_PHASE === 'phase-production-build') ? undefined : FirestoreAdapter(adminDb),
   providers: [
     GoogleProvider({
       clientId: process.env.AUTH_GOOGLE_ID!,
@@ -31,5 +31,4 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session;
     },
   },
-  debug: true,
 });

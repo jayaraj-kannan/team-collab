@@ -16,7 +16,7 @@ if (!admin.apps.length) {
         credential: admin.credential.cert(serviceAccount)
       });
       console.log("🔥 Firebase Admin: Initialized using file at", saPath);
-    } else {
+    } else if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL) {
       // Fallback to environment variables
       admin.initializeApp({
         credential: admin.credential.cert({
@@ -26,13 +26,26 @@ if (!admin.apps.length) {
         }),
       });
       console.log("🔥 Firebase Admin: Initialized via Environment Variables");
+    } else {
+      console.warn("⚠️ Firebase Admin: No credentials found. Skipping initialization (expected during build).");
     }
   } catch (error) {
     console.error("❌ Firebase Admin Initialization Failed:", error);
   }
 }
 
-const adminDb = admin.firestore();
-const adminAuth = admin.auth();
+// Use a Proxy to lazily initialize the database and auth
+// This prevents "No Firebase App" errors during the Next.js build process
+export const adminDb = new Proxy({} as admin.firestore.Firestore, {
+  get(target, prop, receiver) {
+    if (!admin.apps.length) return undefined;
+    return Reflect.get(admin.firestore(), prop, receiver);
+  }
+});
 
-export { adminDb, adminAuth };
+export const adminAuth = new Proxy({} as admin.auth.Auth, {
+  get(target, prop, receiver) {
+    if (!admin.apps.length) return undefined;
+    return Reflect.get(admin.auth(), prop, receiver);
+  }
+});

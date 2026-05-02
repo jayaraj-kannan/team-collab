@@ -6,11 +6,18 @@ import {
   Plus,
   MoreVertical,
   Clock,
-  LogOut
+  LogOut,
+  Trash2,
+  CheckCircle,
+  Circle
 } from "lucide-react";
 import { auth } from "@/auth";
-import { getTasks, createTask, getCalendar, handleSignIn, handleSignOut } from "./actions";
+import { getTasks, createTask, getCalendar, handleSignIn, handleSignOut, toggleTaskStatus, deleteTask } from "./actions";
 import ChatPanel from "@/components/ChatPanel";
+import Toaster from "@/components/Toaster";
+import { TaskForm, TaskList } from "@/components/TaskSection";
+
+export const dynamic = "force-dynamic";
 
 export default async function Page() {
   const session = await auth();
@@ -74,55 +81,12 @@ export default async function Page() {
       <main className="main-content">
         <header className="header">
           <h1 className="header-title">Good morning, {session.user.name?.split(' ')[0] || 'Team'}!</h1>
-          
-          <form action={createTask} style={{ display: 'flex', gap: 12 }}>
-            <input 
-              name="title" 
-              placeholder="What needs to be done?" 
-              style={{ 
-                padding: '10px 16px', 
-                borderRadius: 8, 
-                border: '1px solid var(--border)', 
-                background: 'var(--surface-hover)', 
-                color: 'var(--text-main)', 
-                width: 300,
-                outline: 'none',
-                fontFamily: 'inherit'
-              }}
-              required
-            />
-            <button className="btn-primary" type="submit">
-              <Plus size={18} /> Add Task
-            </button>
-          </form>
+          <TaskForm />
         </header>
 
         <div className="dashboard-grid">
           {/* Card 1: Active Tasks */}
-          <div className="card">
-            <div className="card-header">
-              <h3 className="card-title">Priority Tasks</h3>
-              <MoreVertical size={16} color="var(--text-muted)" />
-            </div>
-            
-            <div className="task-list">
-              {tasks.length === 0 ? (
-                <p style={{ color: 'var(--text-muted)', fontSize: 13, padding: '12px 0' }}>No tasks yet. You're all caught up!</p>
-              ) : (
-                tasks.map((task: any) => (
-                  <div className="task-item" key={task.id}>
-                    <div style={{ marginTop: 2 }}>
-                      <CheckCircle2 size={16} color="var(--text-muted)" />
-                    </div>
-                    <div className="task-content">
-                      <h4>{task.title}</h4>
-                      <p>Created just now</p>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+          <TaskList tasks={tasks} />
 
           {/* Card 2: Upcoming Meetings */}
           <div className="card">
@@ -181,6 +145,7 @@ export default async function Page() {
         </div>
       </main>
       <ChatPanel />
+      <Toaster />
     </div>
   );
 }

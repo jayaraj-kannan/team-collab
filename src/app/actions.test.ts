@@ -1,4 +1,4 @@
-import { createTask, getTasks, getCalendar, handleSignIn, handleSignOut } from './actions';
+import { createTask, getTasks, getCalendar, handleSignIn, handleSignOut, toggleTaskStatus, deleteTask } from './actions';
 import { auth } from '@/auth';
 import { adminDb } from '@/lib/firebase-admin';
 import { revalidatePath } from 'next/cache';
@@ -13,6 +13,9 @@ jest.mock('@/auth', () => ({
 
 jest.mock('@/lib/firebase-admin', () => {
   const addMock = jest.fn();
+  const updateMock = jest.fn();
+  const deleteMock = jest.fn();
+  const docMock = jest.fn().mockReturnValue({ update: updateMock, delete: deleteMock });
   const getMock = jest.fn();
   const orderByMock = jest.fn().mockReturnValue({ get: getMock });
   const whereMock = jest.fn().mockReturnValue({ orderBy: orderByMock });
@@ -22,10 +25,11 @@ jest.mock('@/lib/firebase-admin', () => {
       collection: jest.fn().mockReturnValue({
         add: addMock,
         where: whereMock,
+        doc: docMock,
       }),
     },
     // Exporting these for assertion checks in the tests
-    __mocks: { addMock, whereMock, orderByMock, getMock }
+    __mocks: { addMock, whereMock, orderByMock, getMock, docMock, updateMock, deleteMock }
   };
 });
 
@@ -117,9 +121,73 @@ describe('Server Actions', () => {
       expect(__mocks.orderByMock).toHaveBeenCalledWith('createdAt', 'desc');
       
       expect(tasks).toEqual([
-        { id: '1', title: 'Task 1', status: 'TODO' },
-        { id: '2', title: 'Task 2', status: 'DONE' },
+        { 
+          id: '1', 
+          title: 'Task 1', 
+          status: 'TODO', 
+          projectId: 'default', 
+          assigneeId: undefined, 
+          createdAt: expect.any(Number) 
+        },
+        { 
+          id: '2', 
+          title: 'Task 2', 
+          status: 'DONE', 
+          projectId: 'default', 
+          assigneeId: undefined, 
+          createdAt: expect.any(Number) 
+        },
       ]);
+    });
+  });
+
+  describe('toggleTaskStatus', () => {
+    it('should throw if unauthorized', async () => {
+      (auth as jest.Mock).mockResolvedValueOnce(null);
+      await expect(toggleTaskStatus('1', 'TODO')).rejects.toThrow('Unauthorized');
+    });
+
+    it('should toggle TODO to DONE', async () => {
+      (auth as jest.Mock).mockResolvedValueOnce({ user: { id: 'user123' } });
+      const { __mocks } = require('@/lib/firebase-admin');
+      
+      await toggleTaskStatus('task1', 'TODO');
+      
+      expect(__mocks.docMock).toHaveBeenCalledWith('task1');
+      expect(__mocks.updateMock).toHaveBeenCalledWith(expect.objectContaining({
+        status: 'DONE',
+        updatedAt: expect.any(Date)
+      }));
+      expect(revalidatePath).toHaveBeenCalledWith('/');
+    });
+
+    it('should toggle DONE to TODO', async () => {
+      (auth as jest.Mock).mockResolvedValueOnce({ user: { id: 'user123' } });
+      const { __mocks } = require('@/lib/firebase-admin');
+      
+      await toggleTaskStatus('task1', 'DONE');
+      
+      expect(__mocks.updateMock).toHaveBeenCalledWith(expect.objectContaining({
+        status: 'TODO'
+      }));
+    });
+  });
+
+  describe('deleteTask', () => {
+    it('should throw if unauthorized', async () => {
+      (auth as jest.Mock).mockResolvedValueOnce(null);
+      await expect(deleteTask('1')).rejects.toThrow('Unauthorized');
+    });
+
+    it('should delete a task from Firestore', async () => {
+      (auth as jest.Mock).mockResolvedValueOnce({ user: { id: 'user123' } });
+      const { __mocks } = require('@/lib/firebase-admin');
+      
+      await deleteTask('task1');
+      
+      expect(__mocks.docMock).toHaveBeenCalledWith('task1');
+      expect(__mocks.deleteMock).toHaveBeenCalled();
+      expect(revalidatePath).toHaveBeenCalledWith('/');
     });
   });
 

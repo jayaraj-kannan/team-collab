@@ -33,10 +33,41 @@ export async function getTasks() {
     .orderBy("createdAt", "desc")
     .get();
 
-  return snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  }));
+  return snapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      title: data.title || "Untitled Task",
+      status: data.status || "TODO",
+      projectId: data.projectId || "default",
+      assigneeId: data.assigneeId,
+      // Ensure all dates are plain numbers
+      createdAt: data.createdAt?.toMillis?.() || Date.now(),
+    };
+  });
+}
+
+export async function toggleTaskStatus(id: string, currentStatus: string) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  const newStatus = currentStatus === "DONE" ? "TODO" : "DONE";
+  
+  await adminDb.collection("tasks").doc(id).update({
+    status: newStatus,
+    updatedAt: new Date(),
+  });
+
+  revalidatePath("/");
+}
+
+export async function deleteTask(id: string) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  await adminDb.collection("tasks").doc(id).delete();
+
+  revalidatePath("/");
 }
 
 export async function getCalendar() {

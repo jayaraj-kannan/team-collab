@@ -22,6 +22,21 @@ jest.mock('@/components/ChatPanel', () => {
   };
 });
 
+jest.mock('@/components/Toaster', () => {
+  return function MockToaster() {
+    return <div data-testid="toaster">Toaster</div>;
+  };
+});
+
+jest.mock('@/components/TaskSection', () => ({
+  TaskForm: () => <div data-testid="task-form">Task Form</div>,
+  TaskList: ({ tasks }: any) => (
+    <div data-testid="task-list">
+      {tasks.length === 0 ? "No tasks yet. You're all caught up!" : tasks.map((t: any) => <div key={t.id}>{t.title}</div>)}
+    </div>
+  ),
+}));
+
 // Mock lucide-react to avoid SVG rendering issues in jsdom
 jest.mock('lucide-react', () => {
   return {
@@ -33,6 +48,9 @@ jest.mock('lucide-react', () => {
     MoreVertical: () => <div data-testid="icon-more" />,
     Clock: () => <div data-testid="icon-clock" />,
     LogOut: () => <div data-testid="icon-logout" />,
+    Trash2: () => <div data-testid="icon-trash" />,
+    CheckCircle: () => <div data-testid="icon-check-circle" />,
+    Circle: () => <div data-testid="icon-circle" />,
   };
 });
 
@@ -70,7 +88,7 @@ describe('Dashboard Page', () => {
 
     // Header checks
     expect(screen.getByText('Good morning, Jane!')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Add Task/i })).toBeInTheDocument();
+    expect(screen.getByTestId('task-form')).toBeInTheDocument();
     
     // Sidebar checks
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
