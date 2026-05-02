@@ -3,27 +3,37 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 9090",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "jest",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
-    "@auth/firebase-adapter": "latest",
-    "firebase": "latest",
-    "firebase-admin": "latest",
-    "lucide-react": "latest",
-    "next": "16.2.4",
-    "next-auth": "beta",
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "@auth/firebase-adapter": "^2.4.1",
+    "@google/generative-ai": "^0.13.0",
+    "firebase": "^10.13.0",
+    "firebase-admin": "^12.3.0",
+    "googleapis": "^140.0.1",
+    "lucide-react": "^0.412.0",
+    "next": "14.2.5",
+    "next-auth": "5.0.0-beta.20",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.4",
-    "typescript": "^5"
+    "@testing-library/jest-dom": "^6.4.8",
+    "@testing-library/react": "^15.0.7",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.14.10",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "14.2.5",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.3"
   }
 }
