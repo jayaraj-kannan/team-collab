@@ -3,7 +3,9 @@
 # Configuration
 PROJECT_ID="pw-2026"
 SERVICE_NAME="team-sync"
-REGION="us-central1"
+REGION="asia-south1"
+REPO_NAME="team-sync-repo"
+IMAGE_TAG="$REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$SERVICE_NAME"
 
 # 1. Check for environment file
 if [ -f .env.local ]; then
@@ -17,7 +19,7 @@ fi
 # Next.js standalone does not need build-time substitutions for backend secrets!
 echo "🏗️  Starting Cloud Build for $PROJECT_ID..."
 
-gcloud builds submit --tag gcr.io/$PROJECT_ID/$SERVICE_NAME .
+gcloud builds submit --tag $IMAGE_TAG .
 
 if [ $? -eq 0 ]; then
   echo "✅ Build successful! Deploying to Cloud Run..."
@@ -37,7 +39,7 @@ if [ $? -eq 0 ]; then
 
   # 4. Deploy the pre-built image to Cloud Run using the env-vars file
   gcloud run deploy $SERVICE_NAME \
-    --image gcr.io/$PROJECT_ID/$SERVICE_NAME \
+    --image $IMAGE_TAG \
     --platform managed \
     --region $REGION \
     --allow-unauthenticated \
